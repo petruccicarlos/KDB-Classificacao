@@ -223,11 +223,15 @@ const num = v => { const n=parseFloat(String(v??'').replace(/[^\d.-]/g,'')); ret
 
 /* CSV do Sheets -> [nome,pts,vit,ass] */
 function extrair(linhas){
-  const iCab = linhas.findIndex(l => l.some(c => /piloto/i.test(c||'')));
+  // acha a linha do cabeçalho pela célula que é exatamente "Piloto"
+  // (evita casar com o texto de instruções, que contém a palavra "piloto")
+  let iCab = linhas.findIndex(l => l.some(c => (c||'').trim().toLowerCase()==='piloto'));
+  if(iCab === -1) iCab = linhas.findIndex(l => l.some(c => /piloto/i.test(c||'')));
   if(iCab === -1) return [];
-  const cab = linhas[iCab].map(c => (c||'').toLowerCase());
+  // casa as colunas pelo INÍCIO da célula, não por qualquer trecho
+  const cab = linhas[iCab].map(c => (c||'').trim().toLowerCase());
   const idx = re => cab.findIndex(c => re.test(c));
-  const cNome = idx(/piloto/), cPts = idx(/total/), cVit = idx(/vit/), cAss = idx(/assidu|etapa/);
+  const cNome = idx(/^piloto/), cPts = idx(/^total/), cVit = idx(/^vit/), cAss = idx(/^(assidu|etapa)/);
   const out=[];
   for(let i=iCab+1;i<linhas.length;i++){
     const l = linhas[i];
